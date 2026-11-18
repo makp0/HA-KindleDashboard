@@ -50,6 +50,9 @@ def async_setup(hass: HomeAssistant) -> None:
 @websocket_api.async_response
 async def ws_get_dashboards(hass, connection, msg):
     """Return all dashboard config entries with id, title, and location_name."""
+    if not connection.user.is_admin:
+        connection.send_error(msg["id"], "unauthorized", "Administrator required")
+        return
     from . import _merged_config
     entries = hass.config_entries.async_entries(DOMAIN)
     dashboards = []
@@ -75,6 +78,9 @@ async def ws_get_dashboards(hass, connection, msg):
 })
 @websocket_api.async_response
 async def ws_get_config(hass, connection, msg):
+    if not connection.user.is_admin:
+        connection.send_error(msg["id"], "unauthorized", "Administrator required")
+        return
     from . import _merged_config
     entry = _get_entry(hass, msg["entry_id"])
     if entry is None:
@@ -92,6 +98,9 @@ async def ws_get_config(hass, connection, msg):
 })
 @websocket_api.async_response
 async def ws_save_config(hass, connection, msg):
+    if not connection.user.is_admin:
+        connection.send_error(msg["id"], "unauthorized", "Administrator required")
+        return
     entry = _get_entry(hass, msg["entry_id"])
     if entry is None:
         connection.send_error(msg["id"], "not_found", "Dashboard not found")
@@ -119,6 +128,9 @@ async def ws_save_config(hass, connection, msg):
 })
 @websocket_api.async_response
 async def ws_get_entities(hass, connection, msg):
+    if not connection.user.is_admin:
+        connection.send_error(msg["id"], "unauthorized", "Administrator required")
+        return
     domains = msg.get("domains") or [
         "light", "switch", "scene", "sensor", "input_boolean",
         "media_player", "fan", "cover", "climate", "lock",
@@ -145,6 +157,9 @@ async def ws_get_entities(hass, connection, msg):
 })
 @websocket_api.async_response
 async def ws_force_refresh(hass, connection, msg):
+    if not connection.user.is_admin:
+        connection.send_error(msg["id"], "unauthorized", "Administrator required")
+        return
     from . import bump_reload_counter
     new_val = bump_reload_counter(hass, msg["entry_id"])
     connection.send_result(msg["id"], {"counter": new_val})

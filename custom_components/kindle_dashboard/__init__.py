@@ -53,6 +53,13 @@ PANEL_ICON  = "mdi:tablet"
 PANEL_TITLE = "Kindle Dashboard"
 STATIC_URL  = f"/{DOMAIN}_files"
 
+_DEVICE_HEADERS = {"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"}
+
+
+def _script_json(value: Any) -> str:
+    """Serialize JSON without letting text terminate the script element."""
+    return json.dumps(value).replace("<", "\\u003c")
+
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
@@ -82,7 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 sidebar_icon=PANEL_ICON,
                 module_url=f"{STATIC_URL}/panel.js",
                 embed_iframe=False,
-                require_admin=False,
+                require_admin=True,
             )
             hass.data[DOMAIN]["_panel_registered"] = True
         except Exception:
@@ -195,7 +202,12 @@ class KindleView(HomeAssistantView):
 
         token = request.rel_url.query.get("token", "").strip()
         if not token:
-            return Response(text=_NO_TOKEN_PAGE, content_type="text/html", charset="utf-8")
+            return Response(
+                text=_NO_TOKEN_PAGE, content_type="text/html", charset="utf-8",
+                headers=_DEVICE_HEADERS,
+            )
+        if self.hass.auth.async_validate_access_token(token) is None:
+            return Response(text="Invalid credential.", status=401, headers=_DEVICE_HEADERS)
 
         # Find the entry
         entry = None
@@ -238,40 +250,40 @@ class KindleView(HomeAssistantView):
             html = f.read()
 
         injected = (
-            f"const PAGE_WIDTH       = {json.dumps(page_width)};\n"
-            f"const PAGE_HEIGHT      = {json.dumps(page_height)};\n"
-            f"const PAGE_SCALE       = {json.dumps(page_scale)};\n"
+            f"const PAGE_WIDTH       = {_script_json(page_width)};\n"
+            f"const PAGE_HEIGHT      = {_script_json(page_height)};\n"
+            f"const PAGE_SCALE       = {_script_json(page_scale)};\n"
             f"const HA_URL           = window.location.origin;\n"
-            f"const HA_TOKEN         = {json.dumps(token)};\n"
-            f"const ENTRY_ID         = {json.dumps(entry_id)};\n"
-            f"const LOCATION         = {json.dumps(location)};\n"
-            f"const SECTIONS         = {json.dumps(sections)};\n"
-            f"const BODY_FONT        = {json.dumps(font)};\n"
-            f"const INLINE_UNITS     = {json.dumps(inline_units)};\n"
-            f"const HARD_REFRESH       = {json.dumps(hard_refresh)};\n"
-            f"const REFRESH_INTERVAL  = {json.dumps(refresh_interval)};\n"
-            f"const SHOW_CLOCK       = {json.dumps(show_clock)};\n"
-            f"const SHOW_BATTERY     = {json.dumps(show_battery)};\n"
-            f"const THEME            = {json.dumps(theme)};\n"
-            f"const LABEL_FONT_SIZE  = {json.dumps(label_font_size)};\n"
-            f"const LABEL_BOLD       = {json.dumps(label_bold)};\n"
-            f"const LABEL_ITALIC     = {json.dumps(label_italic)};\n"
-            f"const LABEL_UNDERLINE  = {json.dumps(label_underline)};\n"
-            f"const SUB_FONT_SIZE    = {json.dumps(sub_font_size)};\n"
-            f"const SUB_BOLD         = {json.dumps(sub_bold)};\n"
-            f"const SUB_ITALIC       = {json.dumps(sub_italic)};\n"
-            f"const SUB_UNDERLINE    = {json.dumps(sub_underline)};\n"
-            f"const VALUE_FONT_SIZE  = {json.dumps(value_font_size)};\n"
-            f"const VALUE_BOLD       = {json.dumps(value_bold)};\n"
-            f"const VALUE_ITALIC     = {json.dumps(value_italic)};\n"
-            f"const VALUE_UNDERLINE  = {json.dumps(value_underline)};\n"
+            f"const HA_TOKEN         = {_script_json(token)};\n"
+            f"const ENTRY_ID         = {_script_json(entry_id)};\n"
+            f"const LOCATION         = {_script_json(location)};\n"
+            f"const SECTIONS         = {_script_json(sections)};\n"
+            f"const BODY_FONT        = {_script_json(font)};\n"
+            f"const INLINE_UNITS     = {_script_json(inline_units)};\n"
+            f"const HARD_REFRESH       = {_script_json(hard_refresh)};\n"
+            f"const REFRESH_INTERVAL  = {_script_json(refresh_interval)};\n"
+            f"const SHOW_CLOCK       = {_script_json(show_clock)};\n"
+            f"const SHOW_BATTERY     = {_script_json(show_battery)};\n"
+            f"const THEME            = {_script_json(theme)};\n"
+            f"const LABEL_FONT_SIZE  = {_script_json(label_font_size)};\n"
+            f"const LABEL_BOLD       = {_script_json(label_bold)};\n"
+            f"const LABEL_ITALIC     = {_script_json(label_italic)};\n"
+            f"const LABEL_UNDERLINE  = {_script_json(label_underline)};\n"
+            f"const SUB_FONT_SIZE    = {_script_json(sub_font_size)};\n"
+            f"const SUB_BOLD         = {_script_json(sub_bold)};\n"
+            f"const SUB_ITALIC       = {_script_json(sub_italic)};\n"
+            f"const SUB_UNDERLINE    = {_script_json(sub_underline)};\n"
+            f"const VALUE_FONT_SIZE  = {_script_json(value_font_size)};\n"
+            f"const VALUE_BOLD       = {_script_json(value_bold)};\n"
+            f"const VALUE_ITALIC     = {_script_json(value_italic)};\n"
+            f"const VALUE_UNDERLINE  = {_script_json(value_underline)};\n"
         )
         html = html.replace("/* __INJECTED_CONFIG__ */", injected)
         html = html.replace(
             "/* __VIEWPORT_WIDTH__ */",
             f"width={page_width}, initial-scale=1.0, maximum-scale=1.0"
         )
-        return Response(text=html, content_type="text/html", charset="utf-8")
+        return Response(text=html, content_type="text/html", charset="utf-8", headers=_DEVICE_HEADERS)
 
 
 class KindleReloadView(HomeAssistantView):
@@ -288,8 +300,10 @@ class KindleReloadView(HomeAssistantView):
         from aiohttp.web import Response
         import time
         token = request.rel_url.query.get("token", "").strip()
-        if not token:
-            return Response(text="token required", status=401)
+        if not token or self.hass.auth.async_validate_access_token(token) is None:
+            return Response(text="Valid credential required.", status=401, headers=_DEVICE_HEADERS)
+        if self.hass.data.get(DOMAIN, {}).get(entry_id) is None:
+            return Response(text="Dashboard not found.", status=404, headers=_DEVICE_HEADERS)
         # Record heartbeat — use last 8 chars of token as client key
         client_key = token[-8:] if len(token) >= 8 else token
         beats = self.hass.data.get(DOMAIN, {}).get("_heartbeats", {})
@@ -306,7 +320,7 @@ class KindleReloadView(HomeAssistantView):
         return Response(
             text=str(counter),
             content_type="text/plain",
-            headers={"Access-Control-Allow-Origin": "*"},
+            headers=_DEVICE_HEADERS,
         )
 
 
