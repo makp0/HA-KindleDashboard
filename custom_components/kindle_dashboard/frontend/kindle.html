@@ -25,7 +25,7 @@
   body {
     background: #fff; color: #000;
     overflow-x: hidden; -webkit-text-size-adjust: 100%;
-    display: flex; flex-direction: column;
+    display: -webkit-box; display: flex; -webkit-box-orient: vertical; flex-direction: column;
     /* width, height, font set by JS boot block */
   }
 
@@ -34,7 +34,7 @@
   #info-bar {
     background: #f0f0f0; border-bottom: 3px solid #000;
     padding: 6px 12px;
-    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    display: -webkit-box; display: flex; -webkit-box-align: center; align-items: center; -webkit-box-pack: justify; justify-content: space-between; gap: 8px;
     min-height: 42px;  /* fixed height = two-line state; prevents layout shift */
   }
   #info-bar .loc {
@@ -42,11 +42,11 @@
     flex-shrink: 0;
   }
   #info-bar .lights-right {
-    display: flex; align-items: center; flex-shrink: 0;
+    display: -webkit-box; display: flex; -webkit-box-align: center; align-items: center; flex-shrink: 0;
   }
   #info-bar .lights-count-text { margin-right: 8px; }
   #info-bar .dot-row { margin-left: 2px; }
-  .dot-row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .dot-row { display: -webkit-box; display: flex; gap: 5px; flex-wrap: wrap; -webkit-box-align: center; align-items: center; }
   .light-dot {
     width: 12px; height: 12px; border-radius: 50%;
     border: 2px solid #000; background: #fff; display: inline-block; flex-shrink: 0;
@@ -81,7 +81,7 @@
   }
   .sensor-tile {
     border: 1px solid #000; text-align: center; background: #fff;
-    display: flex; flex-direction: column; justify-content: center;
+    display: -webkit-box; display: flex; -webkit-box-orient: vertical; flex-direction: column; justify-content: center;
     padding: 4px 6px; overflow: hidden; min-height: 0;
   }
   .sensor-tile .s-label {
@@ -122,7 +122,7 @@
   }
   .scene-btn {
     border: 2px solid #000; background: #fff; padding: 0; cursor: pointer;
-    text-align: left; display: flex; flex-direction: column; min-height: 64px;
+    text-align: left; display: -webkit-box; display: flex; -webkit-box-orient: vertical; flex-direction: column; min-height: 64px;
     overflow: hidden; -webkit-tap-highlight-color: transparent;
   }
   .scene-btn:active, .scene-btn.active-scene { background: #000; color: #fff; }
@@ -145,7 +145,7 @@
 
   /* ── TOGGLES — large touch targets ── */
   .toggles-list {
-    display: flex; flex-direction: column; gap: 6px;
+    display: -webkit-box; display: flex; -webkit-box-orient: vertical; flex-direction: column; gap: 6px;
     padding: 10px 12px;
     border-bottom: 1px solid #ddd;
   }
@@ -158,13 +158,13 @@
   /* toggle-label font in grid inherits --label-fs from body vars */
   .toggles-grid .toggle-label small { font-size: var(--sub-fs, 9px); }
   .toggle-row {
-    border: 2px solid #000; display: flex; align-items: center;
+    border: 2px solid #000; display: -webkit-box; display: flex; -webkit-box-align: center; align-items: center;
     min-height: 52px; cursor: pointer;
     -webkit-tap-highlight-color: transparent; background: #fff;
   }
   .toggle-row:active { background: #e8e8e8; }
   .toggle-icon {
-    width: 48px; min-height: 52px; display: flex; align-items: center;
+    width: 48px; min-height: 52px; display: -webkit-box; display: flex; -webkit-box-align: center; align-items: center;
     justify-content: center; font-size: 18px;
     background: #f0f0f0; border-right: 2px solid #000; flex-shrink: 0;
   }
@@ -196,7 +196,7 @@
   }
   #footer {
     border-top: 2px solid #000; padding: 5px 12px;
-    display: flex; justify-content: space-between; align-items: center;
+    display: -webkit-box; display: flex; -webkit-box-pack: justify; justify-content: space-between; -webkit-box-align: center; align-items: center;
     font-family: 'Courier New', monospace; font-size: 10px; color: #666; letter-spacing: .06em;
     flex-shrink: 0;
   }
@@ -204,7 +204,7 @@
     font-family: 'Courier New', monospace; font-size: 10px;
     color: #888; letter-spacing: .06em;
   }
-  #footer .footer-right { display: flex; align-items: center; }
+  #footer .footer-right { display: -webkit-box; display: flex; -webkit-box-align: center; align-items: center; }
   #conn-status { font-family: 'Courier New', monospace; font-size: 10px;
                  color: #666; letter-spacing: .06em; }
   #refresh-btn {
@@ -391,6 +391,18 @@
 <script>
 function pad(n){return n<10?"0"+n:""+n;}
 
+function deviceNameFromUrl() {
+  var parts = window.location.search.slice(1).split("&");
+  for (var i = 0; i < parts.length; i++) {
+    var pair = parts[i].split("=");
+    if (pair[0] === "device" && pair[1]) {
+      try { return decodeURIComponent(pair[1].replace(/\+/g, " ")); }
+      catch (error) { return ""; }
+    }
+  }
+  return "";
+}
+
 /* Bar visibility is initialised in the main boot block below,
    after the injected config constants are defined. */
 var _showClock   = true;   /* defaults; overwritten by boot block */
@@ -451,7 +463,7 @@ function kbPushBattery(pct) {
   var loc = (typeof LOCATION !== "undefined" ? LOCATION : "kindle")
     .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
   /* Device name from URL ?device= param — makes entity ID unique per device */
-  var deviceName = (new URLSearchParams(window.location.search).get("device") || "")
+  var deviceName = deviceNameFromUrl()
     .toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
   var entityId = deviceName
     ? "sensor." + loc + "_battery_" + deviceName
@@ -479,7 +491,7 @@ function kbPushBattery(pct) {
   });
 
   var xp = new XMLHttpRequest();
-  xp.open("POST", HA_URL + "/api/states/" + entityId, true);
+  xp.open("POST", "/api/states/" + entityId, true);
   xp.setRequestHeader("Content-Type", "application/json");
   xp.setRequestHeader("Authorization", "Bearer " + HA_TOKEN);
   xp.timeout = 3000;
@@ -498,7 +510,7 @@ function kbCheckReload() {
   var _token   = (typeof HA_TOKEN   !== "undefined") ? HA_TOKEN   : "";
   var _entryId = (typeof ENTRY_ID   !== "undefined") ? ENTRY_ID   : "";
   var xr = new XMLHttpRequest();
-  xr.open("GET", HA_URL + "/api/kindle_dashboard/reload/" + _entryId +
+  xr.open("GET", "/api/kindle_dashboard/reload/" + _entryId +
           "?token=" + encodeURIComponent(_token), true);
   xr.timeout = 3000;
   xr.onload = function() {
@@ -523,7 +535,7 @@ setInterval(kbCheckReload, 5000);  /* check for power-button wake every 5s */
 
 
 <script>/* __INJECTED_CONFIG__ */</script>
-<script>const MDI = {"lamp":"󰚵","lamp-outline":"󱟐","lamps":"󱕶","lamps-outline":"󱟑","outdoor-lamp":"󱁔","ceiling-light":"󰝩","ceiling-light-outline":"󱟇","ceiling-light-multiple":"󱣝","ceiling-light-multiple-outline":"󱣞","floor-lamp":"󰣝","floor-lamp-outline":"󱟈","floor-lamp-dual":"󱁀","floor-lamp-dual-outline":"󱟎","floor-lamp-torchiere":"󱝇","floor-lamp-torchiere-outline":"󱟖","floor-lamp-torchiere-variant":"󱁁","floor-lamp-torchiere-variant-outline":"󱟏","lightbulb":"󰌵","lightbulb-outline":"󰌶","lightbulb-off":"󰹏","lightbulb-off-outline":"󰹐","lightbulb-on":"󰛨","lightbulb-on-outline":"󰛩","lightbulb-on-10":"󱩎","lightbulb-on-20":"󱩏","lightbulb-on-30":"󱩐","lightbulb-on-40":"󱩑","lightbulb-on-50":"󱩒","lightbulb-on-60":"󱩓","lightbulb-on-70":"󱩔","lightbulb-on-80":"󱩕","lightbulb-on-90":"󱩖","lightbulb-auto":"󱠀","lightbulb-auto-outline":"󱠁","lightbulb-cfl":"󱈈","lightbulb-cfl-off":"󱈉","lightbulb-cfl-spiral":"󱉵","lightbulb-cfl-spiral-off":"󱋃","lightbulb-fluorescent-tube":"󱠄","lightbulb-fluorescent-tube-outline":"󱠅","lightbulb-group":"󱉓","lightbulb-group-off":"󱋍","lightbulb-group-outline":"󱉔","lightbulb-group-off-outline":"󱋎","lightbulb-multiple":"󱉕","lightbulb-multiple-off":"󱋏","lightbulb-multiple-outline":"󱉖","lightbulb-multiple-off-outline":"󱋐","lightbulb-night":"󱩌","lightbulb-night-outline":"󱩍","lightbulb-question":"󱧣","lightbulb-question-outline":"󱧤","lightbulb-spot":"󱟴","lightbulb-spot-off":"󱟵","lightbulb-variant":"󱠂","lightbulb-variant-outline":"󱠃","led-strip":"󰟖","led-strip-variant":"󱁑","led-strip-variant-off":"󱩋","led-on":"󰌬","led-off":"󰌫","led-outline":"󰌭","led-variant-on":"󰌯","led-variant-off":"󰌮","led-variant-outline":"󰌰","string-lights":"󱊺","string-lights-off":"󱊻","toggle-switch":"󰔡","toggle-switch-off":"󰔢","toggle-switch-outline":"󰨚","toggle-switch-off-outline":"󰨙","toggle-switch-variant":"󱨥","toggle-switch-variant-off":"󱨦","power":"󰐥","power-off":"󰤂","power-plug":"󰚥","power-plug-off":"󰚦","power-plug-outline":"󱐥","power-plug-off-outline":"󱐤","power-socket":"󰐧","power-socket-au":"󰤅","power-socket-de":"󱄇","power-socket-eu":"󰟧","power-socket-fr":"󱄈","power-socket-jp":"󱄉","power-socket-uk":"󰟨","power-socket-us":"󰟩","electric-switch":"󰺟","electric-switch-closed":"󱃙","air-filter":"󰵃","air-conditioner":"󰀛","air-humidifier":"󱂙","air-humidifier-off":"󱑦","air-purifier":"󰵄","air-purifier-off":"󱭗","thermostat":"󰎓","thermostat-auto":"󱬗","thermostat-box":"󰢑","thermostat-cog":"󱲀","heat-pump":"󱩃","heat-pump-outline":"󱩄","hvac":"󱍒","hvac-off":"󱖞","fan":"󰈐","fan-off":"󰠝","fan-auto":"󱜝","fan-plus":"󱑯","fan-minus":"󱑰","fan-alert":"󱑬","fan-chevron-down":"󱑭","fan-chevron-up":"󱑮","fan-clock":"󱨺","fan-remove":"󱑱","fan-speed-1":"󱑲","fan-speed-2":"󱑳","fan-speed-3":"󱑴","radiator":"󰐸","radiator-disabled":"󰫗","radiator-off":"󰫘","snowflake":"󰜗","snowflake-off":"󱓣","snowflake-thermometer":"󱩱","fire":"󰈸","fire-off":"󱜢","heat-wave":"󱩅","weather-windy":"󰖝","thermometer":"󰔏","thermometer-off":"󱔱","thermometer-auto":"󱬏","thermometer-bluetooth":"󱢕","thermometer-check":"󱩿","thermometer-chevron-down":"󰸂","thermometer-chevron-up":"󰸃","thermometer-high":"󱃂","thermometer-lines":"󰔐","thermometer-low":"󱃃","thermometer-minus":"󰸄","thermometer-plus":"󰸅","thermometer-probe":"󱬫","thermometer-probe-off":"󱬬","thermometer-water":"󱪀","water-percent":"󰖎","water-percent-alert":"󱔉","water-alert":"󱔂","water-boiler":"󰾒","water-boiler-alert":"󱆳","water-boiler-off":"󱆴","gauge":"󰊚","gauge-empty":"󰡳","gauge-full":"󰡴","gauge-low":"󰡵","motion-sensor":"󰶑","motion-sensor-off":"󱐵","smoke-detector":"󰎒","smoke-detector-alert":"󱤮","smoke-detector-off":"󱠉","smoke-detector-variant":"󱠋","smoke-detector-variant-alert":"󱤰","smoke-detector-variant-off":"󱠌","fire-alert":"󱗗","fire-extinguisher":"󰻲","fire-hydrant":"󱄷","leak":"󰷗","leak-off":"󰷘","molecule-co":"󱋾","molecule-co2":"󰟤","gas-cylinder":"󰙇","lock":"󰌾","lock-off":"󱙱","lock-open":"󰌿","lock-outline":"󰍁","lock-off-outline":"󱙲","lock-open-outline":"󰍀","lock-alert":"󰣮","lock-alert-outline":"󱗑","lock-check":"󱎚","lock-check-outline":"󱚨","lock-clock":"󰥿","lock-minus":"󱚩","lock-minus-outline":"󱚪","lock-open-alert":"󱎛","lock-open-alert-outline":"󱗒","lock-open-check":"󱎜","lock-open-check-outline":"󱚫","lock-open-minus":"󱚬","lock-open-minus-outline":"󱚭","lock-open-plus":"󱚮","lock-open-plus-outline":"󱚯","lock-open-remove":"󱚰","lock-open-remove-outline":"󱚱","lock-open-variant":"󰿆","lock-open-variant-outline":"󰿇","lock-pattern":"󰛪","lock-plus":"󰗻","lock-plus-outline":"󱚲","lock-remove":"󱚳","lock-remove-outline":"󱚴","lock-reset":"󰝳","lock-smart":"󰢲","door-open":"󰠜","door-closed":"󰠛","door-closed-lock":"󱂯","door-sliding":"󱠞","door-sliding-open":"󱠠","garage":"󰛙","garage-open":"󰛚","garage-lock":"󱟻","garage-open-variant":"󱋔","garage-variant":"󱋓","garage-variant-lock":"󱟼","gate":"󰊙","gate-open":"󱅪","gate-alert":"󱟸","gate-and":"󰣡","gate-arrow-left":"󱟷","gate-arrow-right":"󱅩","shield":"󰒘","shield-home":"󰚊","shield-home-outline":"󰳋","shield-lock":"󰦝","shield-lock-open":"󱦚","shield-lock-outline":"󰳌","alarm":"󰀠","alarm-off":"󰀣","alarm-plus":"󰀤","alarm-check":"󰀡","alarm-light":"󰞏","alarm-light-off":"󱜞","alarm-light-outline":"󰯪","alarm-light-off-outline":"󱜟","alarm-panel":"󱗄","alarm-panel-outline":"󱗅","bell":"󰂚","bell-off":"󰂛","bell-outline":"󰂜","bell-ring":"󰂞","bell-ring-outline":"󰂟","bell-alert":"󰵙","bell-alert-outline":"󰺁","bell-cancel":"󱏧","bell-cancel-outline":"󱏨","bell-check":"󱇥","bell-check-outline":"󱇦","bell-minus":"󱏩","bell-minus-outline":"󱏪","bell-plus":"󰂝","bell-plus-outline":"󰪒","bell-remove":"󱏫","bell-remove-outline":"󱏬","bell-sleep":"󰂠","bell-sleep-outline":"󰪓","cctv":"󰞮","cctv-off":"󱡟","camera":"󰄀","camera-off":"󰗟","camera-outline":"󰵝","camera-iris":"󰄄","video":"󰕧","video-off":"󰕨","video-outline":"󰯜","blinds":"󰂬","blinds-open":"󱀑","blinds-horizontal":"󱨫","blinds-horizontal-closed":"󱨬","blinds-vertical":"󱨭","blinds-vertical-closed":"󱨮","roller-shade":"󱩫","roller-shade-closed":"󱩬","window-shutter":"󱄜","window-shutter-alert":"󱄝","window-shutter-open":"󱄞","curtains":"󱡆","curtains-closed":"󱡇","awning":"󱮇","awning-outline":"󱮈","window-open":"󰖱","window-closed":"󰖮","window-open-variant":"󱇜","window-closed-variant":"󱇛","home":"󰋜","home-outline":"󰚡","home-modern":"󰋝","home-city":"󰴕","home-city-outline":"󰴖","home-flood":"󰻺","home-off":"󱩆","home-off-outline":"󱩇","home-alert":"󰡻","home-alert-outline":"󱗐","home-automation":"󰟑","sofa":"󰒹","sofa-outline":"󱕭","sofa-single":"󱕮","sofa-single-outline":"󱕯","bed":"󰋣","bed-outline":"󰂙","bed-empty":"󰢠","bed-king":"󰿒","bed-queen":"󰿐","bed-single":"󱁭","table-furniture":"󰖼","table-chair":"󱁡","desk":"󱈹","desk-lamp":"󰥟","desk-lamp-off":"󱬟","desk-lamp-on":"󱬠","bathtub":"󱠘","bathtub-outline":"󱠙","shower":"󰦠","shower-head":"󰦡","toilet":"󰦫","countertop":"󱠜","countertop-outline":"󱠝","fridge":"󰊐","fridge-outline":"󰊏","fridge-off":"󱆯","fridge-off-outline":"󱆰","fridge-bottom":"󰊒","fridge-industrial":"󱗮","fridge-industrial-outline":"󱗳","fridge-industrial-off":"󱗱","fridge-industrial-off-outline":"󱗲","fridge-top":"󰊑","fridge-variant":"󱗴","fridge-variant-off":"󱗷","fridge-variant-outline":"󱗹","stove":"󰓞","microwave":"󰲙","microwave-off":"󱐣","dishwasher":"󰪬","dishwasher-off":"󱆹","dishwasher-alert":"󱆸","washing-machine":"󰜪","washing-machine-off":"󱆽","washing-machine-alert":"󱆼","tumble-dryer":"󰤗","tumble-dryer-off":"󱆻","tumble-dryer-alert":"󱆺","toaster":"󱁣","toaster-off":"󱆷","toaster-oven":"󰳓","coffee":"󰅶","coffee-off":"󰾪","coffee-outline":"󰛊","coffee-maker":"󱂟","coffee-maker-outline":"󱠛","kettle":"󰗺","kettle-off":"󱌛","kettle-outline":"󰽖","blender":"󰳫","blender-outline":"󱠚","robot-vacuum":"󰜍","robot-vacuum-off":"󱰁","robot-vacuum-variant":"󰤈","robot-vacuum-variant-off":"󱰂","robot-mower":"󱇷","television":"󰔂","television-off":"󰠻","television-play":"󰻏","television-pause":"󰾉","television-stop":"󰾊","television-ambient-light":"󱍖","television-box":"󰠹","television-shimmer":"󱄐","speaker":"󰓃","speaker-off":"󰓄","speaker-bluetooth":"󰦢","speaker-multiple":"󰴸","speaker-wireless":"󰜟","speaker-play":"󱭲","speaker-pause":"󱭳","speaker-stop":"󱭴","volume-high":"󰕾","volume-low":"󰕿","volume-medium":"󰖀","volume-off":"󰖁","volume-mute":"󰝟","remote":"󰑔","remote-off":"󰻄","remote-tv":"󰻅","remote-tv-off":"󰻆","cast":"󰄘","cast-off":"󰞊","cast-connected":"󰄙","projector":"󰐮","projector-off":"󱨣","projector-screen":"󰐯","projector-screen-off":"󱠍","projector-screen-outline":"󱜤","projector-screen-variant":"󱠏","projector-screen-variant-off":"󱠐","projector-screen-variant-outline":"󱠒","battery":"󰁹","battery-outline":"󰂎","battery-10":"󰁺","battery-20":"󰁻","battery-30":"󰁼","battery-40":"󰁽","battery-50":"󰁾","battery-60":"󰁿","battery-70":"󰂀","battery-80":"󰂁","battery-90":"󰂂","battery-10-bluetooth":"󰤾","battery-20-bluetooth":"󰤿","battery-30-bluetooth":"󰥀","battery-40-bluetooth":"󰥁","battery-50-bluetooth":"󰥂","battery-60-bluetooth":"󰥃","battery-70-bluetooth":"󰥄","battery-80-bluetooth":"󰥅","battery-90-bluetooth":"󰥆","battery-bluetooth":"󰥈","battery-bluetooth-variant":"󰥉","battery-alert":"󰂃","battery-alert-bluetooth":"󰥇","battery-alert-variant":"󱃌","battery-alert-variant-outline":"󱃍","battery-arrow-down":"󱟞","battery-arrow-down-outline":"󱟟","battery-arrow-up":"󱟠","battery-arrow-up-outline":"󱟡","battery-charging":"󰂄","battery-charging-10":"󰢜","battery-charging-20":"󰂆","battery-charging-30":"󰂇","battery-charging-40":"󰂈","battery-charging-50":"󰢝","battery-charging-60":"󰂉","battery-charging-70":"󰢞","battery-charging-80":"󰂊","battery-charging-90":"󰂋","battery-charging-100":"󰂅","battery-charging-high":"󱊦","battery-charging-low":"󱊤","battery-charging-medium":"󱊥","battery-charging-outline":"󰢟","battery-charging-wireless":"󰠇","battery-charging-wireless-10":"󰠈","battery-charging-wireless-20":"󰠉","battery-charging-wireless-30":"󰠊","battery-charging-wireless-40":"󰠋","battery-charging-wireless-50":"󰠌","battery-charging-wireless-60":"󰠍","battery-charging-wireless-70":"󰠎","battery-charging-wireless-80":"󰠏","battery-charging-wireless-90":"󰠐","battery-charging-wireless-alert":"󰠑","battery-charging-wireless-outline":"󰠒","battery-clock":"󱧥","battery-clock-outline":"󱧦","battery-heart":"󱈏","battery-heart-outline":"󱈐","battery-heart-variant":"󱈑","battery-high":"󱊣","battery-low":"󱊡","battery-medium":"󱊢","battery-minus":"󱟤","battery-minus-outline":"󱟥","battery-minus-variant":"󰂌","battery-off":"󱉝","battery-off-outline":"󱉞","battery-plus":"󱟦","battery-plus-outline":"󱟧","battery-plus-variant":"󰂏","battery-remove":"󱟨","battery-remove-outline":"󱟩","battery-sync":"󱠴","battery-sync-outline":"󱠵","battery-unknown":"󰂑","battery-unknown-bluetooth":"󰥊","wifi":"󰖩","wifi-off":"󰖪","wifi-strength-1":"󰤟","wifi-strength-2":"󰤢","wifi-strength-3":"󰤥","wifi-strength-4":"󰤨","wifi-strength-alert-outline":"󰤫","wifi-strength-off":"󰤭","wifi-strength-off-outline":"󰤮","zigbee":"󰵁","z-wave":"󰫪","bluetooth":"󰂯","bluetooth-off":"󰂲","bluetooth-connect":"󰂱","bluetooth-transfer":"󰂴","router":"󱇢","router-network":"󱂇","router-wireless":"󰑩","router-wireless-off":"󱖣","router-wireless-settings":"󰩩","hub":"󱲕","hub-outline":"󱲖","nas":"󰣳","server":"󰒋","server-network":"󰒍","solar-panel":"󰶛","solar-panel-large":"󰶜","solar-power":"󰩲","solar-power-variant":"󱩳","solar-power-variant-outline":"󱩴","transmission-tower":"󰴾","transmission-tower-export":"󱤬","transmission-tower-import":"󱤭","transmission-tower-off":"󱧝","ev-plug-ccs1":"󱔙","ev-plug-ccs2":"󱔚","ev-plug-chademo":"󱔛","ev-plug-tesla":"󱔜","ev-plug-type1":"󱔝","ev-plug-type2":"󱔞","ev-station":"󰗱","car-electric":"󰭬","car-electric-outline":"󱖵","lightning-bolt":"󱐋","lightning-bolt-circle":"󰠠","lightning-bolt-outline":"󱐌","meter-electric":"󱩗","meter-electric-outline":"󱩘","meter-gas":"󱩙","meter-gas-outline":"󱩚","counter":"󰆙","flash":"󰉁","flash-off":"󰉃","flash-outline":"󰛕","flash-auto":"󰉂","flash-red-eye":"󰙻","flash-triangle":"󱬝","flash-triangle-outline":"󱬞","weather-sunny":"󰖙","weather-night":"󰖔","weather-cloudy":"󰖐","weather-rainy":"󰖗","weather-snowy":"󰖘","weather-fog":"󰖑","weather-partly-cloudy":"󰖕","weather-sunset":"󰖚","weather-sunset-down":"󰖛","weather-sunset-up":"󰖜","cog":"󰒓","cog-outline":"󰢻","cog-off":"󱏎","cog-off-outline":"󱏏","cog-refresh":"󱑞","cog-refresh-outline":"󱑟","cog-sync":"󱑠","cog-sync-outline":"󱑡","tune":"󰘮","tune-variant":"󱕂","tune-vertical":"󰙪","tune-vertical-variant":"󱕃","run":"󰜎","walk":"󰖃","human":"󰋦","human-greeting":"󱟄","account":"󰀄","account-outline":"󰀓","account-off":"󰀒","account-off-outline":"󰯧","account-group":"󰡉","account-group-outline":"󰭘","sleep":"󰒲","power-sleep":"󰤄","power-standby":"󰤆","car":"󰄋","car-outline":"󱓭","car-off":"󰸜","bicycle":"󱂜","scooter":"󱖽","motorbike":"󰍼","leaf":"󰌪","sprout":"󰹦","sprout-outline":"󰹧","water":"󰖌","water-off":"󰖍","water-outline":"󰸊","umbrella":"󰕊","umbrella-outline":"󰕋","umbrella-closed":"󰦰","pool":"󰘆","pool-thermometer":"󱩟","grass":"󱔐","tree":"󰔱","tree-outline":"󰹩","flower":"󰉊","flower-outline":"󰧰","flower-pollen":"󱢅","flower-pollen-outline":"󱢆"};</script>
+<script>var MDI = {"lamp":"󰚵","lamp-outline":"󱟐","lamps":"󱕶","lamps-outline":"󱟑","outdoor-lamp":"󱁔","ceiling-light":"󰝩","ceiling-light-outline":"󱟇","ceiling-light-multiple":"󱣝","ceiling-light-multiple-outline":"󱣞","floor-lamp":"󰣝","floor-lamp-outline":"󱟈","floor-lamp-dual":"󱁀","floor-lamp-dual-outline":"󱟎","floor-lamp-torchiere":"󱝇","floor-lamp-torchiere-outline":"󱟖","floor-lamp-torchiere-variant":"󱁁","floor-lamp-torchiere-variant-outline":"󱟏","lightbulb":"󰌵","lightbulb-outline":"󰌶","lightbulb-off":"󰹏","lightbulb-off-outline":"󰹐","lightbulb-on":"󰛨","lightbulb-on-outline":"󰛩","lightbulb-on-10":"󱩎","lightbulb-on-20":"󱩏","lightbulb-on-30":"󱩐","lightbulb-on-40":"󱩑","lightbulb-on-50":"󱩒","lightbulb-on-60":"󱩓","lightbulb-on-70":"󱩔","lightbulb-on-80":"󱩕","lightbulb-on-90":"󱩖","lightbulb-auto":"󱠀","lightbulb-auto-outline":"󱠁","lightbulb-cfl":"󱈈","lightbulb-cfl-off":"󱈉","lightbulb-cfl-spiral":"󱉵","lightbulb-cfl-spiral-off":"󱋃","lightbulb-fluorescent-tube":"󱠄","lightbulb-fluorescent-tube-outline":"󱠅","lightbulb-group":"󱉓","lightbulb-group-off":"󱋍","lightbulb-group-outline":"󱉔","lightbulb-group-off-outline":"󱋎","lightbulb-multiple":"󱉕","lightbulb-multiple-off":"󱋏","lightbulb-multiple-outline":"󱉖","lightbulb-multiple-off-outline":"󱋐","lightbulb-night":"󱩌","lightbulb-night-outline":"󱩍","lightbulb-question":"󱧣","lightbulb-question-outline":"󱧤","lightbulb-spot":"󱟴","lightbulb-spot-off":"󱟵","lightbulb-variant":"󱠂","lightbulb-variant-outline":"󱠃","led-strip":"󰟖","led-strip-variant":"󱁑","led-strip-variant-off":"󱩋","led-on":"󰌬","led-off":"󰌫","led-outline":"󰌭","led-variant-on":"󰌯","led-variant-off":"󰌮","led-variant-outline":"󰌰","string-lights":"󱊺","string-lights-off":"󱊻","toggle-switch":"󰔡","toggle-switch-off":"󰔢","toggle-switch-outline":"󰨚","toggle-switch-off-outline":"󰨙","toggle-switch-variant":"󱨥","toggle-switch-variant-off":"󱨦","power":"󰐥","power-off":"󰤂","power-plug":"󰚥","power-plug-off":"󰚦","power-plug-outline":"󱐥","power-plug-off-outline":"󱐤","power-socket":"󰐧","power-socket-au":"󰤅","power-socket-de":"󱄇","power-socket-eu":"󰟧","power-socket-fr":"󱄈","power-socket-jp":"󱄉","power-socket-uk":"󰟨","power-socket-us":"󰟩","electric-switch":"󰺟","electric-switch-closed":"󱃙","air-filter":"󰵃","air-conditioner":"󰀛","air-humidifier":"󱂙","air-humidifier-off":"󱑦","air-purifier":"󰵄","air-purifier-off":"󱭗","thermostat":"󰎓","thermostat-auto":"󱬗","thermostat-box":"󰢑","thermostat-cog":"󱲀","heat-pump":"󱩃","heat-pump-outline":"󱩄","hvac":"󱍒","hvac-off":"󱖞","fan":"󰈐","fan-off":"󰠝","fan-auto":"󱜝","fan-plus":"󱑯","fan-minus":"󱑰","fan-alert":"󱑬","fan-chevron-down":"󱑭","fan-chevron-up":"󱑮","fan-clock":"󱨺","fan-remove":"󱑱","fan-speed-1":"󱑲","fan-speed-2":"󱑳","fan-speed-3":"󱑴","radiator":"󰐸","radiator-disabled":"󰫗","radiator-off":"󰫘","snowflake":"󰜗","snowflake-off":"󱓣","snowflake-thermometer":"󱩱","fire":"󰈸","fire-off":"󱜢","heat-wave":"󱩅","weather-windy":"󰖝","thermometer":"󰔏","thermometer-off":"󱔱","thermometer-auto":"󱬏","thermometer-bluetooth":"󱢕","thermometer-check":"󱩿","thermometer-chevron-down":"󰸂","thermometer-chevron-up":"󰸃","thermometer-high":"󱃂","thermometer-lines":"󰔐","thermometer-low":"󱃃","thermometer-minus":"󰸄","thermometer-plus":"󰸅","thermometer-probe":"󱬫","thermometer-probe-off":"󱬬","thermometer-water":"󱪀","water-percent":"󰖎","water-percent-alert":"󱔉","water-alert":"󱔂","water-boiler":"󰾒","water-boiler-alert":"󱆳","water-boiler-off":"󱆴","gauge":"󰊚","gauge-empty":"󰡳","gauge-full":"󰡴","gauge-low":"󰡵","motion-sensor":"󰶑","motion-sensor-off":"󱐵","smoke-detector":"󰎒","smoke-detector-alert":"󱤮","smoke-detector-off":"󱠉","smoke-detector-variant":"󱠋","smoke-detector-variant-alert":"󱤰","smoke-detector-variant-off":"󱠌","fire-alert":"󱗗","fire-extinguisher":"󰻲","fire-hydrant":"󱄷","leak":"󰷗","leak-off":"󰷘","molecule-co":"󱋾","molecule-co2":"󰟤","gas-cylinder":"󰙇","lock":"󰌾","lock-off":"󱙱","lock-open":"󰌿","lock-outline":"󰍁","lock-off-outline":"󱙲","lock-open-outline":"󰍀","lock-alert":"󰣮","lock-alert-outline":"󱗑","lock-check":"󱎚","lock-check-outline":"󱚨","lock-clock":"󰥿","lock-minus":"󱚩","lock-minus-outline":"󱚪","lock-open-alert":"󱎛","lock-open-alert-outline":"󱗒","lock-open-check":"󱎜","lock-open-check-outline":"󱚫","lock-open-minus":"󱚬","lock-open-minus-outline":"󱚭","lock-open-plus":"󱚮","lock-open-plus-outline":"󱚯","lock-open-remove":"󱚰","lock-open-remove-outline":"󱚱","lock-open-variant":"󰿆","lock-open-variant-outline":"󰿇","lock-pattern":"󰛪","lock-plus":"󰗻","lock-plus-outline":"󱚲","lock-remove":"󱚳","lock-remove-outline":"󱚴","lock-reset":"󰝳","lock-smart":"󰢲","door-open":"󰠜","door-closed":"󰠛","door-closed-lock":"󱂯","door-sliding":"󱠞","door-sliding-open":"󱠠","garage":"󰛙","garage-open":"󰛚","garage-lock":"󱟻","garage-open-variant":"󱋔","garage-variant":"󱋓","garage-variant-lock":"󱟼","gate":"󰊙","gate-open":"󱅪","gate-alert":"󱟸","gate-and":"󰣡","gate-arrow-left":"󱟷","gate-arrow-right":"󱅩","shield":"󰒘","shield-home":"󰚊","shield-home-outline":"󰳋","shield-lock":"󰦝","shield-lock-open":"󱦚","shield-lock-outline":"󰳌","alarm":"󰀠","alarm-off":"󰀣","alarm-plus":"󰀤","alarm-check":"󰀡","alarm-light":"󰞏","alarm-light-off":"󱜞","alarm-light-outline":"󰯪","alarm-light-off-outline":"󱜟","alarm-panel":"󱗄","alarm-panel-outline":"󱗅","bell":"󰂚","bell-off":"󰂛","bell-outline":"󰂜","bell-ring":"󰂞","bell-ring-outline":"󰂟","bell-alert":"󰵙","bell-alert-outline":"󰺁","bell-cancel":"󱏧","bell-cancel-outline":"󱏨","bell-check":"󱇥","bell-check-outline":"󱇦","bell-minus":"󱏩","bell-minus-outline":"󱏪","bell-plus":"󰂝","bell-plus-outline":"󰪒","bell-remove":"󱏫","bell-remove-outline":"󱏬","bell-sleep":"󰂠","bell-sleep-outline":"󰪓","cctv":"󰞮","cctv-off":"󱡟","camera":"󰄀","camera-off":"󰗟","camera-outline":"󰵝","camera-iris":"󰄄","video":"󰕧","video-off":"󰕨","video-outline":"󰯜","blinds":"󰂬","blinds-open":"󱀑","blinds-horizontal":"󱨫","blinds-horizontal-closed":"󱨬","blinds-vertical":"󱨭","blinds-vertical-closed":"󱨮","roller-shade":"󱩫","roller-shade-closed":"󱩬","window-shutter":"󱄜","window-shutter-alert":"󱄝","window-shutter-open":"󱄞","curtains":"󱡆","curtains-closed":"󱡇","awning":"󱮇","awning-outline":"󱮈","window-open":"󰖱","window-closed":"󰖮","window-open-variant":"󱇜","window-closed-variant":"󱇛","home":"󰋜","home-outline":"󰚡","home-modern":"󰋝","home-city":"󰴕","home-city-outline":"󰴖","home-flood":"󰻺","home-off":"󱩆","home-off-outline":"󱩇","home-alert":"󰡻","home-alert-outline":"󱗐","home-automation":"󰟑","sofa":"󰒹","sofa-outline":"󱕭","sofa-single":"󱕮","sofa-single-outline":"󱕯","bed":"󰋣","bed-outline":"󰂙","bed-empty":"󰢠","bed-king":"󰿒","bed-queen":"󰿐","bed-single":"󱁭","table-furniture":"󰖼","table-chair":"󱁡","desk":"󱈹","desk-lamp":"󰥟","desk-lamp-off":"󱬟","desk-lamp-on":"󱬠","bathtub":"󱠘","bathtub-outline":"󱠙","shower":"󰦠","shower-head":"󰦡","toilet":"󰦫","countertop":"󱠜","countertop-outline":"󱠝","fridge":"󰊐","fridge-outline":"󰊏","fridge-off":"󱆯","fridge-off-outline":"󱆰","fridge-bottom":"󰊒","fridge-industrial":"󱗮","fridge-industrial-outline":"󱗳","fridge-industrial-off":"󱗱","fridge-industrial-off-outline":"󱗲","fridge-top":"󰊑","fridge-variant":"󱗴","fridge-variant-off":"󱗷","fridge-variant-outline":"󱗹","stove":"󰓞","microwave":"󰲙","microwave-off":"󱐣","dishwasher":"󰪬","dishwasher-off":"󱆹","dishwasher-alert":"󱆸","washing-machine":"󰜪","washing-machine-off":"󱆽","washing-machine-alert":"󱆼","tumble-dryer":"󰤗","tumble-dryer-off":"󱆻","tumble-dryer-alert":"󱆺","toaster":"󱁣","toaster-off":"󱆷","toaster-oven":"󰳓","coffee":"󰅶","coffee-off":"󰾪","coffee-outline":"󰛊","coffee-maker":"󱂟","coffee-maker-outline":"󱠛","kettle":"󰗺","kettle-off":"󱌛","kettle-outline":"󰽖","blender":"󰳫","blender-outline":"󱠚","robot-vacuum":"󰜍","robot-vacuum-off":"󱰁","robot-vacuum-variant":"󰤈","robot-vacuum-variant-off":"󱰂","robot-mower":"󱇷","television":"󰔂","television-off":"󰠻","television-play":"󰻏","television-pause":"󰾉","television-stop":"󰾊","television-ambient-light":"󱍖","television-box":"󰠹","television-shimmer":"󱄐","speaker":"󰓃","speaker-off":"󰓄","speaker-bluetooth":"󰦢","speaker-multiple":"󰴸","speaker-wireless":"󰜟","speaker-play":"󱭲","speaker-pause":"󱭳","speaker-stop":"󱭴","volume-high":"󰕾","volume-low":"󰕿","volume-medium":"󰖀","volume-off":"󰖁","volume-mute":"󰝟","remote":"󰑔","remote-off":"󰻄","remote-tv":"󰻅","remote-tv-off":"󰻆","cast":"󰄘","cast-off":"󰞊","cast-connected":"󰄙","projector":"󰐮","projector-off":"󱨣","projector-screen":"󰐯","projector-screen-off":"󱠍","projector-screen-outline":"󱜤","projector-screen-variant":"󱠏","projector-screen-variant-off":"󱠐","projector-screen-variant-outline":"󱠒","battery":"󰁹","battery-outline":"󰂎","battery-10":"󰁺","battery-20":"󰁻","battery-30":"󰁼","battery-40":"󰁽","battery-50":"󰁾","battery-60":"󰁿","battery-70":"󰂀","battery-80":"󰂁","battery-90":"󰂂","battery-10-bluetooth":"󰤾","battery-20-bluetooth":"󰤿","battery-30-bluetooth":"󰥀","battery-40-bluetooth":"󰥁","battery-50-bluetooth":"󰥂","battery-60-bluetooth":"󰥃","battery-70-bluetooth":"󰥄","battery-80-bluetooth":"󰥅","battery-90-bluetooth":"󰥆","battery-bluetooth":"󰥈","battery-bluetooth-variant":"󰥉","battery-alert":"󰂃","battery-alert-bluetooth":"󰥇","battery-alert-variant":"󱃌","battery-alert-variant-outline":"󱃍","battery-arrow-down":"󱟞","battery-arrow-down-outline":"󱟟","battery-arrow-up":"󱟠","battery-arrow-up-outline":"󱟡","battery-charging":"󰂄","battery-charging-10":"󰢜","battery-charging-20":"󰂆","battery-charging-30":"󰂇","battery-charging-40":"󰂈","battery-charging-50":"󰢝","battery-charging-60":"󰂉","battery-charging-70":"󰢞","battery-charging-80":"󰂊","battery-charging-90":"󰂋","battery-charging-100":"󰂅","battery-charging-high":"󱊦","battery-charging-low":"󱊤","battery-charging-medium":"󱊥","battery-charging-outline":"󰢟","battery-charging-wireless":"󰠇","battery-charging-wireless-10":"󰠈","battery-charging-wireless-20":"󰠉","battery-charging-wireless-30":"󰠊","battery-charging-wireless-40":"󰠋","battery-charging-wireless-50":"󰠌","battery-charging-wireless-60":"󰠍","battery-charging-wireless-70":"󰠎","battery-charging-wireless-80":"󰠏","battery-charging-wireless-90":"󰠐","battery-charging-wireless-alert":"󰠑","battery-charging-wireless-outline":"󰠒","battery-clock":"󱧥","battery-clock-outline":"󱧦","battery-heart":"󱈏","battery-heart-outline":"󱈐","battery-heart-variant":"󱈑","battery-high":"󱊣","battery-low":"󱊡","battery-medium":"󱊢","battery-minus":"󱟤","battery-minus-outline":"󱟥","battery-minus-variant":"󰂌","battery-off":"󱉝","battery-off-outline":"󱉞","battery-plus":"󱟦","battery-plus-outline":"󱟧","battery-plus-variant":"󰂏","battery-remove":"󱟨","battery-remove-outline":"󱟩","battery-sync":"󱠴","battery-sync-outline":"󱠵","battery-unknown":"󰂑","battery-unknown-bluetooth":"󰥊","wifi":"󰖩","wifi-off":"󰖪","wifi-strength-1":"󰤟","wifi-strength-2":"󰤢","wifi-strength-3":"󰤥","wifi-strength-4":"󰤨","wifi-strength-alert-outline":"󰤫","wifi-strength-off":"󰤭","wifi-strength-off-outline":"󰤮","zigbee":"󰵁","z-wave":"󰫪","bluetooth":"󰂯","bluetooth-off":"󰂲","bluetooth-connect":"󰂱","bluetooth-transfer":"󰂴","router":"󱇢","router-network":"󱂇","router-wireless":"󰑩","router-wireless-off":"󱖣","router-wireless-settings":"󰩩","hub":"󱲕","hub-outline":"󱲖","nas":"󰣳","server":"󰒋","server-network":"󰒍","solar-panel":"󰶛","solar-panel-large":"󰶜","solar-power":"󰩲","solar-power-variant":"󱩳","solar-power-variant-outline":"󱩴","transmission-tower":"󰴾","transmission-tower-export":"󱤬","transmission-tower-import":"󱤭","transmission-tower-off":"󱧝","ev-plug-ccs1":"󱔙","ev-plug-ccs2":"󱔚","ev-plug-chademo":"󱔛","ev-plug-tesla":"󱔜","ev-plug-type1":"󱔝","ev-plug-type2":"󱔞","ev-station":"󰗱","car-electric":"󰭬","car-electric-outline":"󱖵","lightning-bolt":"󱐋","lightning-bolt-circle":"󰠠","lightning-bolt-outline":"󱐌","meter-electric":"󱩗","meter-electric-outline":"󱩘","meter-gas":"󱩙","meter-gas-outline":"󱩚","counter":"󰆙","flash":"󰉁","flash-off":"󰉃","flash-outline":"󰛕","flash-auto":"󰉂","flash-red-eye":"󰙻","flash-triangle":"󱬝","flash-triangle-outline":"󱬞","weather-sunny":"󰖙","weather-night":"󰖔","weather-cloudy":"󰖐","weather-rainy":"󰖗","weather-snowy":"󰖘","weather-fog":"󰖑","weather-partly-cloudy":"󰖕","weather-sunset":"󰖚","weather-sunset-down":"󰖛","weather-sunset-up":"󰖜","cog":"󰒓","cog-outline":"󰢻","cog-off":"󱏎","cog-off-outline":"󱏏","cog-refresh":"󱑞","cog-refresh-outline":"󱑟","cog-sync":"󱑠","cog-sync-outline":"󱑡","tune":"󰘮","tune-variant":"󱕂","tune-vertical":"󰙪","tune-vertical-variant":"󱕃","run":"󰜎","walk":"󰖃","human":"󰋦","human-greeting":"󱟄","account":"󰀄","account-outline":"󰀓","account-off":"󰀒","account-off-outline":"󰯧","account-group":"󰡉","account-group-outline":"󰭘","sleep":"󰒲","power-sleep":"󰤄","power-standby":"󰤆","car":"󰄋","car-outline":"󱓭","car-off":"󰸜","bicycle":"󱂜","scooter":"󱖽","motorbike":"󰍼","leaf":"󰌪","sprout":"󰹦","sprout-outline":"󰹧","water":"󰖌","water-off":"󰖍","water-outline":"󰸊","umbrella":"󰕊","umbrella-outline":"󰕋","umbrella-closed":"󰦰","pool":"󰘆","pool-thermometer":"󱩟","grass":"󱔐","tree":"󰔱","tree-outline":"󰹩","flower":"󰉊","flower-outline":"󰧰","flower-pollen":"󱢅","flower-pollen-outline":"󱢆"};</script>
 <script>function mdiChar(name){return MDI[name]||name||'';}</script>
 
 <script>
@@ -544,27 +556,27 @@ if (_barVisible) setInterval(kbTick, 10000);
 // Apply theme class to body
 document.body.className = (typeof THEME !== "undefined" && THEME) ? "theme-" + THEME : "theme-sharp";
 /* device label set at bottom of page */
-const _pw = (typeof PAGE_WIDTH  !== "undefined" && PAGE_WIDTH)  || 600;
-const _ph = (typeof PAGE_HEIGHT !== "undefined" && PAGE_HEIGHT) || 800;
-const _sc = (typeof PAGE_SCALE  !== "undefined" && PAGE_SCALE)  || 1.0;
+var _pw = (typeof PAGE_WIDTH  !== "undefined" && PAGE_WIDTH)  || 600;
+var _ph = (typeof PAGE_HEIGHT !== "undefined" && PAGE_HEIGHT) || 800;
+var _sc = (typeof PAGE_SCALE  !== "undefined" && PAGE_SCALE)  || 1.0;
 document.body.style.width          = _pw + "px";
 document.body.style.height         = _ph + "px";
 if (_sc !== 1.0) {
   document.body.style.transform       = "scale(" + _sc + ")";
   document.body.style.transformOrigin = "top left";
 }
-const _lfs  = (typeof LABEL_FONT_SIZE !== "undefined" ? LABEL_FONT_SIZE : 13) + "px";
-const _sfs  = (typeof SUB_FONT_SIZE   !== "undefined" ? SUB_FONT_SIZE   : 10) + "px";
-const _vfs  = (typeof VALUE_FONT_SIZE !== "undefined" ? VALUE_FONT_SIZE : 18) + "px";
-const _lfw  = (typeof LABEL_BOLD      !== "undefined" && LABEL_BOLD)      ? "bold"         : "normal";
-const _lfi  = (typeof LABEL_ITALIC    !== "undefined" && LABEL_ITALIC)    ? "italic"       : "normal";
-const _lftd = (typeof LABEL_UNDERLINE !== "undefined" && LABEL_UNDERLINE) ? "underline"    : "none";
-const _sfw  = (typeof SUB_BOLD        !== "undefined" && SUB_BOLD)        ? "bold"         : "normal";
-const _sfi  = (typeof SUB_ITALIC      !== "undefined" && SUB_ITALIC)      ? "italic"       : "normal";
-const _sftd = (typeof SUB_UNDERLINE   !== "undefined" && SUB_UNDERLINE)   ? "underline"    : "none";
-const _vfw  = (typeof VALUE_BOLD      !== "undefined" && VALUE_BOLD)      ? "bold"         : "normal";
-const _vfi  = (typeof VALUE_ITALIC    !== "undefined" && VALUE_ITALIC)    ? "italic"       : "normal";
-const _vftd = (typeof VALUE_UNDERLINE !== "undefined" && VALUE_UNDERLINE) ? "underline"    : "none";
+var _lfs  = (typeof LABEL_FONT_SIZE !== "undefined" ? LABEL_FONT_SIZE : 13) + "px";
+var _sfs  = (typeof SUB_FONT_SIZE   !== "undefined" ? SUB_FONT_SIZE   : 10) + "px";
+var _vfs  = (typeof VALUE_FONT_SIZE !== "undefined" ? VALUE_FONT_SIZE : 18) + "px";
+var _lfw  = (typeof LABEL_BOLD      !== "undefined" && LABEL_BOLD)      ? "bold"         : "normal";
+var _lfi  = (typeof LABEL_ITALIC    !== "undefined" && LABEL_ITALIC)    ? "italic"       : "normal";
+var _lftd = (typeof LABEL_UNDERLINE !== "undefined" && LABEL_UNDERLINE) ? "underline"    : "none";
+var _sfw  = (typeof SUB_BOLD        !== "undefined" && SUB_BOLD)        ? "bold"         : "normal";
+var _sfi  = (typeof SUB_ITALIC      !== "undefined" && SUB_ITALIC)      ? "italic"       : "normal";
+var _sftd = (typeof SUB_UNDERLINE   !== "undefined" && SUB_UNDERLINE)   ? "underline"    : "none";
+var _vfw  = (typeof VALUE_BOLD      !== "undefined" && VALUE_BOLD)      ? "bold"         : "normal";
+var _vfi  = (typeof VALUE_ITALIC    !== "undefined" && VALUE_ITALIC)    ? "italic"       : "normal";
+var _vftd = (typeof VALUE_UNDERLINE !== "undefined" && VALUE_UNDERLINE) ? "underline"    : "none";
 document.documentElement.style.setProperty("--label-fs", _lfs);
 document.documentElement.style.setProperty("--sub-fs",   _sfs);
 document.documentElement.style.setProperty("--value-fs", _vfs);
@@ -609,41 +621,55 @@ document.documentElement.style.setProperty("--value-td", _vftd);
 function apiHeaders() {
   return {
     "Content-Type": "application/json",
-    "Authorization": "Bearer " + HA_TOKEN,
+    "Authorization": "Bearer " + HA_TOKEN
   };
 }
 
 /* ── STATE ────────────────────────────────────────── */
-let entityStates = {};
+var entityStates = {};
 
 /* ── API HELPERS ──────────────────────────────────── */
-async function callService(domain, service, entityId) {
-  try {
-    const r = await fetch(`${HA_URL}/api/services/${domain}/${service}`, {
-      method: "POST", headers: apiHeaders(),
-      body: JSON.stringify({ entity_id: entityId }),
-    });
-    if (r.ok) { toast("Done"); setTimeout(fetchAll, 1200); }
-    else toast("Error " + r.status);
-  } catch(e) { toast("Network error"); }
+// Paperwhite 3 WebKit supports XMLHttpRequest but has no fetch or Promise.
+function requestJSON(method, path, payload, callback) {
+  var request = new XMLHttpRequest();
+  request.open(method, path, true);
+  request.timeout = 8000;
+  var headers = apiHeaders();
+  Object.keys(headers).forEach(function (name) {
+    request.setRequestHeader(name, headers[name]);
+  });
+  request.onload = function () {
+    var data = null;
+    if (request.status >= 200 && request.status < 300 && request.responseText) {
+      try { data = JSON.parse(request.responseText); }
+      catch (error) { /* Keep the status for callers that only need success. */ }
+    }
+    callback(data, request.status);
+  };
+  request.onerror = request.ontimeout = function () { callback(null, 0); };
+  request.send(payload);
 }
 
-async function fetchState(id) {
-  try {
-    const r = await fetch(`${HA_URL}/api/states/${id}`, { headers: apiHeaders() });
-    return r.ok ? await r.json() : null;
-  } catch(e) { return null; }
+function callService(domain, service, entityId) {
+  var path = "/api/services/" + domain + "/" + service;
+  requestJSON("POST", path, JSON.stringify({ entity_id: entityId }), function (data, status) {
+    if (status >= 200 && status < 300) {
+      toast("Done");
+      setTimeout(fetchAll, 1200);
+    } else {
+      toast(status ? "Error " + status : "Network error");
+    }
+  });
 }
 
-/* ── COLLECT ALL ENTITY IDS ACROSS SECTIONS ───────── */
 function allEntityIds() {
-  const ids = new Set();
-  (SECTIONS || []).forEach(sec => {
-    (sec.items || []).forEach(item => {
-      if (item.id) ids.add(item.id);
+  var ids = [];
+  (SECTIONS || []).forEach(function (sec) {
+    (sec.items || []).forEach(function (item) {
+      if (item.id && ids.indexOf(item.id) === -1) ids.push(item.id);
     });
   });
-  return [...ids];
+  return ids;
 }
 
 function doRefresh() {
@@ -654,54 +680,69 @@ function doRefresh() {
   }
 }
 
-async function fetchAll() {
-  /* conn-status updated after fetch completes */
-  const ids = allEntityIds();
-  const results = await Promise.all(ids.map(fetchState));
-  let anyFail = false;
-  results.forEach((d, i) => {
-    if (d) entityStates[ids[i]] = d;
-    else anyFail = true;
+function fetchAll() {
+  var ids = allEntityIds();
+  var remaining = ids.length;
+  var anyFail = false;
+  function render() {
+    document.getElementById("conn-status").textContent = anyFail ? "◌ partial" : "● live";
+    updateAllSections();
+    updateLightSummary();
+    document.getElementById("last-update").textContent = "Updated: " + formatTime(new Date());
+  }
+  if (!remaining) {
+    render();
+    return;
+  }
+  ids.forEach(function (id) {
+    requestJSON("GET", "/api/states/" + encodeURIComponent(id), null, function (data) {
+      if (data) entityStates[id] = data;
+      else anyFail = true;
+      remaining--;
+      if (!remaining) render();
+    });
   });
-  document.getElementById("conn-status").textContent = anyFail ? "◌ partial" : "● live";
-  updateAllSections();
-  updateLightSummary();
-  document.getElementById("last-update").textContent =
-    "Updated: " + formatTime(new Date());
 }
 
 /* ── LIGHT STATUS STRIP ───────────────────────────── */
-function buildLightSummary() {
-  const lights = [];
-  (SECTIONS || []).forEach(sec => {
-    if (sec.type === "toggles") {
-      (sec.items || []).filter(i => i.id.startsWith("light.") && !i.hide_from_status)
-        .forEach(i => lights.push(i));
-    }
+function visibleLights() {
+  var lights = [];
+  (SECTIONS || []).forEach(function (sec) {
+    if (sec.type !== "toggles") return;
+    (sec.items || []).forEach(function (item) {
+      if (item.id && item.id.indexOf("light.") === 0 && !item.hide_from_status) {
+        lights.push(item);
+      }
+    });
   });
-  const strip = document.getElementById("lights-right");
-  if (!lights.length) { strip.style.display = "none"; return; }
-  strip.style.display = "flex";
-  const container = document.getElementById("light-dots");
-  container.innerHTML = lights.map(l =>
-    `<span class="light-dot" id="dot-${l.id.replace(/\./g,'_')}" title="${l.label || l.id}"></span>`
-  ).join("");
+  return lights;
+}
+
+function buildLightSummary() {
+  var lights = visibleLights();
+  var strip = document.getElementById("lights-right");
+  strip.style.display = lights.length ? "" : "none";
+  var container = document.getElementById("light-dots");
+  container.textContent = "";
+  lights.forEach(function (light) {
+    var dot = appendText(container, "span", "light-dot");
+    dot.id = "dot-" + light.id.replace(/\./g, "_");
+    dot.title = light.label || light.id;
+  });
 }
 
 function updateLightSummary() {
-  const lights = [];
-  (SECTIONS || []).forEach(sec => {
-    if (sec.type === "toggles") {
-      (sec.items || []).filter(i => i.id.startsWith("light.") && !i.hide_from_status)
-        .forEach(i => lights.push(i));
+  var lights = visibleLights();
+  var onCount = 0;
+  var onNames = [];
+  lights.forEach(function (l) {
+    var d = entityStates[l.id];
+    var on = !!(d && d.state === "on");
+    if (on) {
+      onCount++;
+      onNames.push(l.label || l.id);
     }
-  });
-  let onCount = 0, onNames = [];
-  lights.forEach(l => {
-    const d = entityStates[l.id];
-    const on = !!(d && d.state === "on");
-    if (on) { onCount++; onNames.push(l.label || l.id); }
-    const dot = document.getElementById("dot-" + l.id.replace(/\./g, "_"));
+    var dot = document.getElementById("dot-" + l.id.replace(/\./g, "_"));
     if (dot) dot.className = "light-dot" + (on ? " on" : "");
   });
   document.getElementById("lights-on-count").textContent =
@@ -710,126 +751,113 @@ function updateLightSummary() {
 }
 
 /* ── BUILD SECTIONS ───────────────────────────────── */
+function appendText(parent, tag, className, text) {
+  var element = document.createElement(tag);
+  element.className = className;
+  if (text !== undefined) element.textContent = text;
+  parent.appendChild(element);
+  return element;
+}
+
 function buildAllSections() {
-  const root = document.getElementById("sections-root");
-  root.innerHTML = "";
-  (SECTIONS || []).forEach((sec, si) => {
-    const wrap = document.createElement("div");
-    wrap.className = "section-wrap";
+  var root = document.getElementById("sections-root");
+  root.textContent = "";
+  (SECTIONS || []).forEach(function (sec, si) {
+    var wrap = appendText(root, "div", "section-wrap");
     wrap.id = "sec-" + si;
-
-    const lbl = document.createElement("div");
-    lbl.className = "section-label";
-    lbl.textContent = sec.label || "";
-    wrap.appendChild(lbl);
-
-    if      (sec.type === "sensors") buildSensorSection(wrap, sec, si);
-    else if (sec.type === "scenes")  buildScenesSection(wrap, sec, si);
+    appendText(wrap, "div", "section-label", sec.label || "");
+    if (sec.type === "sensors") buildSensorSection(wrap, sec, si);
+    else if (sec.type === "scenes") buildScenesSection(wrap, sec, si);
     else if (sec.type === "toggles") buildTogglesSection(wrap, sec, si);
-
-    root.appendChild(wrap);
   });
 }
 
 function buildSensorSection(wrap, sec, si) {
-  const grid = document.createElement("div");
-  grid.className = "sensor-grid";
+  var grid = appendText(wrap, "div", "sensor-grid");
   grid.id = "sensor-grid-" + si;
-  const cols = Math.min((sec.items || []).length, 4);
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-  const inline = (typeof INLINE_UNITS !== "undefined") ? INLINE_UNITS : false;
+  var cols = Math.min((sec.items || []).length, 4);
+  grid.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+  var inline = typeof INLINE_UNITS !== "undefined" && INLINE_UNITS;
 
-  (sec.items || []).forEach((item, ii) => {
-    const tile = document.createElement("div");
-    tile.className = "sensor-tile";
-    tile.id = `sensor-${si}-${ii}`;
-
+  (sec.items || []).forEach(function (item, ii) {
+    var tile = appendText(grid, "div", "sensor-tile");
+    tile.id = "sensor-" + si + "-" + ii;
+    appendText(tile, "div", "s-label", item.label || (sec.hide_entity_ids ? "" : item.id));
     if (inline) {
-      tile.innerHTML = `
-        <div class="s-label">${item.label || (sec.hide_entity_ids ? '' : item.id)}</div>
-        <div><span class="s-value-inline" id="sv-${si}-${ii}">--</span><span class="s-unit-inline">${item.unit || ""}</span></div>`;
+      var reading = appendText(tile, "div", "");
+      appendText(reading, "span", "s-value-inline", "--").id = "sv-" + si + "-" + ii;
+      appendText(reading, "span", "s-unit-inline", item.unit || "");
     } else {
-      tile.innerHTML = `
-        <div class="s-label">${item.label || (sec.hide_entity_ids ? '' : item.id)}</div>
-        <div class="s-value" id="sv-${si}-${ii}">--</div>
-        <div class="s-unit">${item.unit || ""}</div>`;
+      appendText(tile, "div", "s-value", "--").id = "sv-" + si + "-" + ii;
+      appendText(tile, "div", "s-unit", item.unit || "");
     }
-    grid.appendChild(tile);
   });
-  wrap.appendChild(grid);
 }
 
 function buildScenesSection(wrap, sec, si) {
-  const grid = document.createElement("div");
-  grid.className = "scenes-grid";
-  // Use two_columns setting if set, otherwise auto-detect
-  const cols = sec.two_columns ? 2 : ((sec.items || []).length >= 2 ? 2 : 1);
-  grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  var grid = appendText(wrap, "div", "scenes-grid");
+  var cols = sec.two_columns || (sec.items || []).length >= 2 ? 2 : 1;
+  grid.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
 
-  (sec.items || []).forEach((item, ii) => {
-    const btn = document.createElement("button");
-    btn.className = "scene-btn";
-    btn.id = `scene-${si}-${ii}`;
-    btn.innerHTML = `
-      <div class="scene-icon-bg"><span class="mdi">${mdiChar(item.icon || "flash")}</span></div>
-      <div class="scene-body">
-        <span class="scene-name">${item.name || item.id}</span>
-        <span class="scene-desc">${item.desc || ""}</span>
-      </div>`;
-    btn.addEventListener("click", async () => {
-      wrap.querySelectorAll(".scene-btn").forEach(b => b.classList.remove("active-scene"));
-      btn.classList.add("active-scene");
-      await callService("scene", "turn_on", item.entity || item.id);
+  (sec.items || []).forEach(function (item, ii) {
+    var button = appendText(grid, "button", "scene-btn");
+    button.id = "scene-" + si + "-" + ii;
+    var icon = appendText(button, "div", "scene-icon-bg");
+    appendText(icon, "span", "mdi", mdiChar(item.icon || "flash"));
+    var body = appendText(button, "div", "scene-body");
+    appendText(body, "span", "scene-name", item.name || item.id);
+    appendText(body, "span", "scene-desc", item.desc || "");
+    button.addEventListener("click", function () {
+      Array.prototype.forEach.call(grid.querySelectorAll(".scene-btn"), function (scene) {
+        scene.classList.remove("active-scene");
+      });
+      button.classList.add("active-scene");
+      callService("scene", "turn_on", item.entity || item.id);
     });
-    grid.appendChild(btn);
   });
-  wrap.appendChild(grid);
 }
 
 function buildTogglesSection(wrap, sec, si) {
-  const list = document.createElement("div");
-  list.className = sec.two_columns ? "toggles-grid" : "toggles-list";
-
-  (sec.items || []).forEach((item, ii) => {
-    const row = document.createElement("div");
-    row.className = "toggle-row";
-    row.id = `toggle-${si}-${ii}`;
-    row.innerHTML = `
-      <div class="toggle-icon"><span class="mdi">${mdiChar(item.icon || "lightbulb")}</span></div>
-      <div class="toggle-label">
-        ${item.label || item.id}
-        ${sec.hide_entity_ids ? "" : `<small>${item.id}</small>`}
-      </div>
-      <div class="toggle-switch"></div>`;
-    row.addEventListener("click", async () => {
-      const on = row.classList.contains("on");
-      row.classList.toggle("on", !on);
-      const domain = (item.id || "").split(".")[0] || "light";
-      await callService(domain, on ? "turn_off" : "turn_on", item.id);
+  var list = appendText(wrap, "div", sec.two_columns ? "toggles-grid" : "toggles-list");
+  (sec.items || []).forEach(function (item, ii) {
+    var row = appendText(list, "div", "toggle-row");
+    row.id = "toggle-" + si + "-" + ii;
+    var icon = appendText(row, "div", "toggle-icon");
+    appendText(icon, "span", "mdi", mdiChar(item.icon || "lightbulb"));
+    var label = appendText(row, "div", "toggle-label", item.label || item.id);
+    if (!sec.hide_entity_ids) appendText(label, "small", "", item.id);
+    appendText(row, "div", "toggle-switch");
+    row.addEventListener("click", function () {
+      var on = row.classList.contains("on");
+      setToggleState(row, !on);
+      var domain = (item.id || "").split(".")[0] || "light";
+      callService(domain, on ? "turn_off" : "turn_on", item.id);
     });
-    list.appendChild(row);
   });
-  wrap.appendChild(list);
+}
+
+function setToggleState(row, on) {
+  if (on) row.classList.add("on");
+  else row.classList.remove("on");
 }
 
 /* ── UPDATE ALL SECTIONS ──────────────────────────── */
 function updateAllSections() {
-  (SECTIONS || []).forEach((sec, si) => {
+  (SECTIONS || []).forEach(function (sec, si) {
     if (sec.type === "sensors") {
-      (sec.items || []).forEach((item, ii) => {
-        const el = document.getElementById(`sv-${si}-${ii}`);
+      (sec.items || []).forEach(function (item, ii) {
+        var el = document.getElementById("sv-" + si + "-" + ii);
         if (!el) return;
-        const d = entityStates[item.id];
-        el.textContent = d
-          ? (isNaN(parseFloat(d.state)) ? d.state : Math.round(parseFloat(d.state) * 10) / 10)
-          : "--";
+        var d = entityStates[item.id];
+        var numeric = d ? parseFloat(d.state) : NaN;
+        el.textContent = !d ? "--" : isNaN(numeric) ? d.state : Math.round(numeric * 10) / 10;
       });
     } else if (sec.type === "toggles") {
-      (sec.items || []).forEach((item, ii) => {
-        const row = document.getElementById(`toggle-${si}-${ii}`);
+      (sec.items || []).forEach(function (item, ii) {
+        var row = document.getElementById("toggle-" + si + "-" + ii);
         if (!row) return;
-        const d = entityStates[item.id];
-        row.classList.toggle("on", !!(d && d.state === "on"));
+        var d = entityStates[item.id];
+        setToggleState(row, !!(d && d.state === "on"));
       });
     }
   });
@@ -842,16 +870,13 @@ function updateAllSections() {
    Intl.DateTimeFormat (or a manual offset fallback) to show
    the correct local time.
 ──────────────────────────────────────────────────────── */
-let _tz = null;  // set after fetchTimezone() resolves
+var _tz = null; // set after fetchTimezone() resolves
 
-async function fetchTimezone() {
-  try {
-    const r = await fetch(HA_URL + "/api/config", { headers: apiHeaders() });
-    if (r.ok) {
-      const d = await r.json();
-      _tz = d.time_zone || null;  // e.g. "America/Los_Angeles"
-    }
-  } catch(e) {}
+function fetchTimezone(callback) {
+  requestJSON("GET", "/api/config", null, function (data) {
+    _tz = data ? data.time_zone : null;
+    callback();
+  });
 }
 
 function formatTime(date) {
@@ -861,19 +886,20 @@ function formatTime(date) {
       return new Intl.DateTimeFormat([], {
         hour: "2-digit", minute: "2-digit", timeZone: _tz
       }).format(date);
-    } catch(e) {}
+    } catch (e) {}
   }
   // Fallback: plain locale string (UTC on Kindle, correct on other browsers)
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return pad(date.getHours()) + ":" + pad(date.getMinutes());
 }
 
 /* clock is shown in kb-bar only */
 
 function toast(msg) {
-  const el = document.getElementById("toast");
-  el.textContent = msg; el.style.display = "block";
+  var el = document.getElementById("toast");
+  el.textContent = msg;
+  el.style.display = "block";
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => { el.style.display = "none"; }, 1800);
+  toast._t = setTimeout(function () { el.style.display = "none"; }, 1800);
 }
 
 /* ── BOOT ─────────────────────────────────────────── */
@@ -883,9 +909,9 @@ document.getElementById("loc-name").textContent =
 buildLightSummary();
 buildAllSections();
 // Fetch timezone from HA, then start clock (ensures first tick is correct)
-fetchTimezone().then(() => {
-  if (_barVisible) kbTick();  // now formatTime is available
-  kbCheckReload();  // record initial reload token
+fetchTimezone(function () {
+  if (_barVisible) kbTick(); // now formatTime is available
+  kbCheckReload(); // record initial reload token
 });
 fetchAll();
 setInterval(fetchAll,
@@ -894,15 +920,7 @@ setInterval(fetchAll,
 <script>
 /* Set device label in footer — runs after full DOM parse */
 (function() {
-  /* Manual query string parser for old WebKit compatibility */
-  var search = window.location.search.slice(1);
-  var dn = "";
-  search.split("&").forEach(function(pair) {
-    var parts = pair.split("=");
-    if (parts[0] === "device" && parts[1]) {
-      dn = decodeURIComponent(parts[1].replace(/\+/g, " "));
-    }
-  });
+  var dn = deviceNameFromUrl();
   if (dn) {
     var el = document.getElementById("device-label");
     if (el) el.textContent = dn;
